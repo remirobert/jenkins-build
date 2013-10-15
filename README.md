@@ -1,3 +1,5 @@
+![Screenshot](https://raw.github.com/remirobert/MyMakefile/master/.ressource/jenkins_img.png)
+
 jenkins-build
 =============
 
