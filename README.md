@@ -1,4 +1,4 @@
 jenkins-build
 =============
 
-jenkins-build auto build script
+Script Jenkins for build IOS and ANDROID project, and upload automatically on testflight plateform.
