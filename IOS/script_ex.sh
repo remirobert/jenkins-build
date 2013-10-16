@@ -1,11 +1,15 @@
 export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
 
+#Name of the project
+PROJECT="KxMenuExample"
+
 MODE_DEBUG=false
 API_TOKEN=3afe2aac8655ec73f6b3495d4ab42ff5_MTExMTM0OTIwMTMtMDYtMTQgMDY6MDU6NTMuNzMzNzI3
 TEAM_TOKEN=94cd09572b29a973f20ac0dbaad361db_MjM2NTY2MjAxMy0wNi0xNCAwNjoxNjoxMC42NzIwMjU 
-PROJECT="pdfcomponent_with_vf"
 SIGNING_IDENTITY="iPhone Distribution: Extentia Information Technology" 
-PROVISIONING_PROFILE="${WORKSPACE}/AdHoc_Distribution.mobileprovision"
+PROVISIONING_PROFILE=$(find "/Users/$USER/Library/MobileDevice/Provisioning Profiles/" -name *.mobileprovision | head -1)
+
+echo "PROVISIOMNING PROFILE = "$PROVISIONING_PROFILE
 
 xcodebuild -scheme $PROJECT -sdk iphonesimulator \
 -configuration Release clean build | grep "warning generated." \
@@ -30,25 +34,36 @@ if $MODE_DEBUG ; then
     fi
 fi
 
-ARCHIVE=$(find $HOME -name *${PROJECT}*.xcarchive | head -1)
-IPA_DIR=$(find $HOME -name *.xcodeproj/project.xcworkspace | head -1)
-APP=$(find . -name *.app)
-MOBILE_PROVISION=$(find . -name *.mobileprovision)
+ARCHIVE=$(find "/Users/$USER" -name *${PROJECT}*.xcarchive | head -1)
+IPA_DIR=$(find "/Users/$USER" -name *.xcodeproj/project.xcworkspace | head -1)
+APP=$(find "/Users/$USER/Library/Developer/Xcode/DerivedData/" -name "${PROJECT}" | head -1)
+PATH_MOBILE_PROVISION=$(find "/Users/${USER}/Library/Developer/Xcode" -name "${PROJECT}*" | head -1)
+MOBILE_PROVISION=$(find "${PATH_MOBILE_PROVISION}" -name *.mobileprovision | head -1)
+
+echo "APP before = "$APP
+APP=$(find "/Users/$USER/Library/Developer/Xcode/Archives/" -name "${PROJECT}.app" | head -1)
+echo "APP after = "$APP
 
 xcodebuild -scheme $PROJECT clean 1> /tmp/log_clean
-echo "Second Part Over - Clean"
 xcodebuild -scheme $PROJECT archive 1> /tmp/log_archive
+
+echo "Second Part Over - Clean"
 echo "Third Part Over - Archive"
 
-DSYM=$(find $HOME -name ${PROJECT}.app.dSYM | head -1)
-cp -r $DSYM .
+DSYM=$(find /Users/$USER -name ${PROJECT}.app.dSYM | head -1)
+DSYM="`(cd \"$DSYM\"; pwd)`"
+
+cp -r "$DSYM" .
 zip -r ${PROJECT}.app.dSYM.zip ${PROJECT}.app.dSYM
 rm -rf ${PROJECT}.app.dSYM
 
 PATH_IPA_TMP="/tmp/${PROJECT}.ipa"
 
-/usr/bin/xcrun -sdk iphoneos PackageApplication -v $APP -o $PATH_IPA_TMP \
---sign $SIGNING_IDENTITY --embed $MOBILE_PROVISION 1> /tmp/log_ipa
+echo "check ALL variable before IPA = "
+echo "APP = "$APP
+
+
+/usr/bin/xcrun -sdk iphoneos PackageApplication -v "${APP}" -o "${PATH_IPA_TMP}" --sign $SIGNING_IDENTITY --embed "${MOBILE_PROVISION}" 1> /tmp/log_ipa
 
 echo ".ipa generated"
 
@@ -57,7 +72,7 @@ echo ".ipa generated"
 -F dsym=@"${PROJECT}.app.dSYM.zip" \
 -F api_token="${API_TOKEN}" \
 -F team_token="${TEAM_TOKEN}" \
--F notes="Build ${BUILD_NUMBER} uploaded automatically from Xcode." \
+-F notes="Build ${BUILD_NUMBER} uploaded automatically from script shell on in jenkins." \
 -F notify=True \
 -F distribution_lists='all' > /tmp/log_testflight
 
@@ -65,6 +80,7 @@ sed -n '3,4p' /tmp/log_testflight
 
 echo "Application sent to testflight.com"
 echo "Clean tempory files"
+
 rm -f /tmp/log_testflight \
 /tmp/log_ipa \
 /tmp/log_clean \
