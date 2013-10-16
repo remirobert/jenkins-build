@@ -9,8 +9,6 @@ TEAM_TOKEN=94cd09572b29a973f20ac0dbaad361db_MjM2NTY2MjAxMy0wNi0xNCAwNjoxNjoxMC42
 SIGNING_IDENTITY="iPhone Distribution: Extentia Information Technology" 
 PROVISIONING_PROFILE=$(find "/Users/$USER/Library/MobileDevice/Provisioning Profiles/" -name *.mobileprovision | head -1)
 
-echo "PROVISIOMNING PROFILE = "$PROVISIONING_PROFILE
-
 xcodebuild -scheme $PROJECT -sdk iphonesimulator \
 -configuration Release clean build | grep "warning generated." \
 > /tmp/log_build 2> /tmp/error_build
@@ -37,12 +35,9 @@ fi
 ARCHIVE=$(find "/Users/$USER" -name *${PROJECT}*.xcarchive | head -1)
 IPA_DIR=$(find "/Users/$USER" -name *.xcodeproj/project.xcworkspace | head -1)
 APP=$(find "/Users/$USER/Library/Developer/Xcode/DerivedData/" -name "${PROJECT}" | head -1)
+APP=$(find "/Users/$USER/Library/Developer/Xcode/Archives/" -name "${PROJECT}.app" | head -1)
 PATH_MOBILE_PROVISION=$(find "/Users/${USER}/Library/Developer/Xcode" -name "${PROJECT}*" | head -1)
 MOBILE_PROVISION=$(find "${PATH_MOBILE_PROVISION}" -name *.mobileprovision | head -1)
-
-echo "APP before = "$APP
-APP=$(find "/Users/$USER/Library/Developer/Xcode/Archives/" -name "${PROJECT}.app" | head -1)
-echo "APP after = "$APP
 
 xcodebuild -scheme $PROJECT clean 1> /tmp/log_clean
 xcodebuild -scheme $PROJECT archive 1> /tmp/log_archive
