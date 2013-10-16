@@ -35,12 +35,13 @@ fi
 ARCHIVE=$(find "/Users/$USER" -name *${PROJECT}*.xcarchive | head -1)
 IPA_DIR=$(find "/Users/$USER" -name *.xcodeproj/project.xcworkspace | head -1)
 APP=$(find "/Users/$USER/Library/Developer/Xcode/DerivedData/" -name "${PROJECT}" | head -1)
-APP=$(find "/Users/$USER/Library/Developer/Xcode/Archives/" -name "${PROJECT}.app" | head -1)
 PATH_MOBILE_PROVISION=$(find "/Users/${USER}/Library/Developer/Xcode" -name "${PROJECT}*" | head -1)
 MOBILE_PROVISION=$(find "${PATH_MOBILE_PROVISION}" -name *.mobileprovision | head -1)
 
 xcodebuild -scheme $PROJECT clean 1> /tmp/log_clean
 xcodebuild -scheme $PROJECT archive 1> /tmp/log_archive
+
+APP=$(find "/Users/$USER/Library/Developer/Xcode/Archives/" -name "${PROJECT}.app" | head -1)
 
 echo "Second Part Over - Clean"
 echo "Third Part Over - Archive"
