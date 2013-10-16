@@ -1,4 +1,4 @@
-![Screenshot](https://raw.github.com/remirobert/MyMakefile/master/.ressource/logo-title.png)
+![Screenshot](https://raw.github.com/remirobert/jenkins-build/master/ressource/logo-title.png)
 
 jenkins-build
 =============
