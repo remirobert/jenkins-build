@@ -84,3 +84,5 @@ rm -f /tmp/log_testflight \
 /tmp/erro_build \
 /tmp/log_build \
 $PATH_IPA_TMP
+
+exit 0
