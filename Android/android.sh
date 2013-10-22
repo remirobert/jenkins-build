@@ -16,6 +16,7 @@ SIGNING_IDENTITY="Android Distribution: Extentia Information Technology"
 MAIL_SMTP_SERVER="mail.extentia.com"
 MAIL_SMTP_PORT="587"
 MAIL_SENDER="jenkins@extentia.com"
+MAIL_SUBJECT="Jenkins error build ${NAME_PROJECT}"
 #separate adress with space : ' '
 MAIL_RECIPIENT="remirobert33530 remi.robert@extentia.com"
 
@@ -28,14 +29,16 @@ send_mail()
     fi
     MESSAGE=$1
     python <<EOF
+from email.MIMEText import MIMEText
 import smtplib
 import sys
 
 list_recipient = str.split("${MAIL_RECIPIENT}", " ")
 try:
     server = smtplib.SMTP("${MAIL_SMTP_SERVER}", int("${MAIL_SMTP_PORT}")) 
-    msg = "\n${MESSAGE}"
-    server.sendmail("${MAIL_SENDER}", list_recipient, msg)
+    msg = MIMEText("\n${MESSAGE}")
+    msg['Subject'] = "${MAIL_SUBJECT}"
+    server.sendmail("${MAIL_SENDER}", list_recipient, msg.as_string())
 except:
     sys.stderr.write("error send mail")
 EOF

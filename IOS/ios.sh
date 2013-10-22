@@ -9,6 +9,40 @@ TEAM_TOKEN=94cd09572b29a973f20ac0dbaad361db_MjM2NTY2MjAxMy0wNi0xNCAwNjoxNjoxMC42
 SIGNING_IDENTITY="iPhone Distribution: Extentia Information Technology" 
 PROVISIONING_PROFILE=$(find "/Users/$USER/Library/MobileDevice/Provisioning Profiles/" -name *.mobileprovision | head -1)
 
+#
+#configuration mail
+#
+MAIL_SMTP_SERVER="mail.extentia.com"
+MAIL_SMTP_PORT="587"
+MAIL_SENDER="jenkins@extentia.com"
+MAIL_SUBJECT="Jenkins error build ${PROJECT}"
+#separate adress with space : ' '
+MAIL_RECIPIENT="remirobert33530 remi.robert@extentia.com"
+
+send_mail()
+{
+    if [[ "${#}" != "1" ]]
+    then
+	echo "Bad arguement"
+	return
+    fi
+    MESSAGE=$1
+    python <<EOF
+from email.MIMEText import MIMEText
+import smtplib
+import sys
+
+list_recipient = str.split("${MAIL_RECIPIENT}", " ")
+try:
+    server = smtplib.SMTP("${MAIL_SMTP_SERVER}", int("${MAIL_SMTP_PORT}")) 
+    msg = MIMEText("\n${MESSAGE}")
+    msg['Subject'] = "${MAIL_SUBJECT}"
+    server.sendmail("${MAIL_SENDER}", list_recipient, msg.as_string())
+except:
+    sys.stderr.write("error send mail")
+EOF
+}
+
 xcodebuild -scheme $PROJECT -sdk iphonesimulator \
 -configuration Release clean build | grep "warning generated." \
 > /tmp/log_build 2> /tmp/error_build
@@ -19,6 +53,7 @@ NUMBER_WARNINGS=$(cat /tmp/log_build | wc -l)
 echo "Build "$PROJECT
 
 if [ $NUMBER_ERRORS -gt 0 ]; then
+    send_mail "Error build ${ROJECT} fail :\nbuild failed"
     echo "Build failed" 1>&2
 else
     echo "First Part Over - Build"
@@ -26,6 +61,7 @@ fi
 
 if $MODE_DEBUG ; then
     if [ $NUMBER_WARNINGS -gt 0 ]; then
+	send_mail "Error build ${ROJECT} fail :\nWarnings detected in the compilation"
 	echo "Error warnings" 1>&2
     else
 	echo "No warnings"
