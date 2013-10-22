@@ -68,16 +68,41 @@ if $MODE_DEBUG ; then
     fi
 fi
 
-ARCHIVE=$(find "/Users/$USER" -name *${PROJECT}*.xcarchive | head -1)
-IPA_DIR=$(find "/Users/$USER" -name *.xcodeproj/project.xcworkspace | head -1)
-APP=$(find "/Users/$USER/Library/Developer/Xcode/DerivedData/" -name "${PROJECT}" | head -1)
-PATH_MOBILE_PROVISION=$(find "/Users/${USER}/Library/Developer/Xcode" -name "${PROJECT}*" | head -1)
-MOBILE_PROVISION=$(find "${PATH_MOBILE_PROVISION}" -name *.mobileprovision | head -1)
+ARCHIVE=$(find "/Users/$USER" -name *${PROJECT}*.xcarchive | head -1) 2> /dev/null
+IPA_DIR=$(find "/Users/$USER" -name *.xcodeproj/project.xcworkspace | head -1) 2> /dev/null
+APP=$(find "/Users/$USER/Library/Developer/Xcode/DerivedData/" -name "${PROJECT}" | head -1) 2> /dev/null
+PATH_MOBILE_PROVISION=$(find "/Users/${USER}/Library/Developer/Xcode" -name "${PROJECT}*" | head -1) 2> /dev/null
+MOBILE_PROVISION=$(find "${PATH_MOBILE_PROVISION}" -name *.mobileprovision | head -1) 2> /dev/null
 
-xcodebuild -scheme $PROJECT clean 1> /tmp/log_clean
+if [[ -z $ARCHIVE ]] || [[ -z $IPA_DIR ]] || [[ -z $APP]] || [[ -z $PATH_MOBILE_PROVISION ]] || [[ -z $MOBILE_PROVISION ]]
+then
+    send_mail "Error build ${ROJECT} fail :\nError found project file"
+    echo "Error found projects file" 1>&2
+fi
+
+xcodebuild -scheme $PROJECT clean 1> /tmp/log_clean 2> /dev/null
+RET=$?
+if [[ ! "${RET}" -eq "0" ]]
+then
+    send_mail "Error build ${PROJECT} fail :\nError clean project"
+    echo "Error clean project" 1>&2
+fi
+
 xcodebuild -scheme $PROJECT archive 1> /tmp/log_archive
+RET=$?
+if [[ ! "${RET}" -eq "0" ]]
+then
+    send_mail "Error build ${PROJECT} fail :\nCreate archive failed"
+    echo "Create archive failed" 1>&2
+fi
 
 APP=$(find "/Users/$USER/Library/Developer/Xcode/Archives/" -name "${PROJECT}.app" | head -1)
+
+if [[ -z $APP ]]
+then
+    send_mail "Error build ${PROJECT} fail :\nApp project not found"
+    echo "App project not found" 1>&2    
+fi
 
 echo "Second Part Over - Clean"
 echo "Third Part Over - Archive"
@@ -95,7 +120,14 @@ echo "check ALL variable before IPA = "
 echo "APP = "$APP
 
 
-/usr/bin/xcrun -sdk iphoneos PackageApplication -v "${APP}" -o "${PATH_IPA_TMP}" --sign $SIGNING_IDENTITY --embed "${MOBILE_PROVISION}" 1> /tmp/log_ipa
+/usr/bin/xcrun -sdk iphoneos PackageApplication -v "${APP}" -o "${PATH_IPA_TMP}" --sign $SIGNING_IDENTITY --embed "${MOBILE_PROVISION}" 1> /tmp/log_ipa 2> /dev/null
+
+RET=$?
+if [[ ! "${RET}" -eq "0" ]]
+then
+    send_mail "Error build ${PROJECT} fail :\nIPA failed"
+    echo "IPA failed" 1>&2
+fi
 
 echo ".ipa generated"
 
@@ -106,15 +138,14 @@ echo ".ipa generated"
 -F team_token="${TEAM_TOKEN}" \
 -F notes="Build ${BUILD_NUMBER} uploaded automatically from script shell on in jenkins." \
 -F notify=True \
--F distribution_lists='all' > /tmp/log_testflight
+-F distribution_lists='all'
 
 sed -n '3,4p' /tmp/log_testflight
 
 echo "Application sent to testflight.com"
 echo "Clean tempory files"
 
-rm -f /tmp/log_testflight \
-/tmp/log_ipa \
+rm -f /tmp/log_ipa \
 /tmp/log_clean \
 /tmp/log_archive \
 /tmp/erro_build \
