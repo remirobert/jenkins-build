@@ -60,3 +60,5 @@ echo "done"
 -F notes="Build ${BUILD_NUMBER} uploaded automatically from script shell on in jenkins." \
 -F notify=True \
 -F distribution_lists='all'
+
+exit 0
