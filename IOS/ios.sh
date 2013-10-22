@@ -40,6 +40,7 @@ try:
     server.sendmail("${MAIL_SENDER}", list_recipient, msg.as_string())
 except:
     sys.stderr.write("error send mail")
+print "Send mail"
 EOF
 }
 
@@ -47,17 +48,19 @@ xcodebuild -scheme $PROJECT -sdk iphonesimulator \
 -configuration Release clean build | grep "warning generated." \
 > /tmp/log_build 2> /tmp/error_build
 
+RET=$?
+echo "RET = ${RET}"
+if [[ "${RET}" != "0" ]]
+then
+    send_mail "Error build ${ROJECT} fail :\nbuild failed"
+    echo "Build failed" 1>&2
+fi
+
 NUMBER_ERRORS=$(cat /tmp/error_build | wc -l)
 NUMBER_WARNINGS=$(cat /tmp/log_build | wc -l)
 
 echo "Build "$PROJECT
-
-if [ $NUMBER_ERRORS -gt 0 ]; then
-    send_mail "Error build ${ROJECT} fail :\nbuild failed"
-    echo "Build failed" 1>&2
-else
-    echo "First Part Over - Build"
-fi
+echo "number error = ${NUMBER_ERRORS}"
 
 if $MODE_DEBUG ; then
     if [ $NUMBER_WARNINGS -gt 0 ]; then
