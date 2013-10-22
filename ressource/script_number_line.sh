@@ -12,7 +12,7 @@ then
     exit 2
 fi
 
-NUMBER_LINE=$(sed -e "/^$/d" $1 | wc -l)
+NUMBER_LINE=$(sed -e "/^$/d;/^#/d" $1 | wc -l)
 echo "number line = ${NUMBER_LINE}"
 
 exit 0
